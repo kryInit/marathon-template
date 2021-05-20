@@ -1,10 +1,12 @@
 __doc__ = """
 Usage:
     {f} submit
-    {f} show-log 
+    {f} show-log [-s|--sort] [--head HEAD_NUM]
 
 Options:
     -h, --help                          Show help options.
+    -s, --sort
+    --head HEAD_NUM
 """.format(f=__file__)
 
 
@@ -13,6 +15,7 @@ import sys
 import sqlite3
 import subprocess
 from docopt import docopt
+from functools import reduce
 
 
 def get_score():
@@ -73,9 +76,19 @@ def show_log():
 
     cur.execute('SELECT * FROM submission_log')
 
+    labels = ('id', 'hash', 'score')
     data = cur.fetchall()
-    for x in data:
-        print(*x)
+    if args['--sort']:
+        data.sort(key=lambda x: -x[2])
+    if args['--head']:
+        data = data[:int(args['--head'])]
+    max_lengths = list(reduce(lambda xs, ys: map(max, zip(xs, ys)), map(lambda x: map(lambda y: len(str(y)), x), data), map(len, labels)))
+    data_info_formatted = list(map(lambda xs: [str(xs[i]).ljust(max_lengths[i]) for i in range(len(xs))], data))
+    labels_formatted = [labels[i].center(max_lengths[i]) for i in range(len(labels))]
+    print(' | '.join(labels_formatted))
+    print(' | '.join(map(lambda x: '-'*x, max_lengths)))
+    for i in data_info_formatted:
+        print(' | '.join(i))
 
     conn.commit()
     cur.close()
