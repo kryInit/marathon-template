@@ -1,0 +1,67 @@
+TESTCASE_NUM = 10
+FORMAT = "%04.0f"
+CONCURRENCY = 10
+IN_DIR = "${PROJECT_TOP_DIR}/workplace/in"
+OUT_DIR = "${PROJECT_TOP_DIR}/workplace/out"
+
+
+[[preprocess]]
+name = "create workspace"
+run = [ "if [ ! -d workplace ]; then mkdir workplace; fi" ]
+working-directory = "$PROJECT_TOP_DIR"
+
+
+[[preprocess]]
+name = "build"
+run = [
+    "if [ ! -d build ]; then mkdir build; fi",
+    "cd build",
+    "cmake -DCMAKE_BUILD_TYPE=Release ../..",
+    "make -j 12",
+]
+working-directory = "$PROJECT_TOP_DIR/workplace"
+
+
+[[preprocess]]
+name = "download tools and build"
+run = [
+    "if [ -d ./tools ]; then exit 0; fi",
+    "curl https://img.atcoder.jp/ahc001/ded8fd3366b4ff0b0d7d053f553cdb84.zip --output tmp.zip",
+    "unzip tmp.zip",
+    "rm tmp.zip",
+    "cd tools",
+    "cargo build --release --bin gen",
+    "cargo build --release --bin vis",
+]
+working-directory = "$PROJECT_TOP_DIR/workplace"
+
+
+[[preprocess]]
+name = "generate testcases and out dir"
+run = [
+    "if [ ! -f $IN_DIR/`printf %04.0f $((${TESTCASE_NUM}-1))`.txt ]; then seq $TESTCASE_NUM | ./tools/target/release/gen; fi",
+    "if [ ! -d $OUT_DIR ]; then mkdir $OUT_DIR; fi"
+]
+working-directory = "$PROJECT_TOP_DIR/workplace"
+
+
+[solver]
+run = [ "./build/solver < $IN_PATH > $OUT_PATH" ]
+working-directory = "$PROJECT_TOP_DIR/workplace"
+
+
+[scoring]
+run = [ "./tools/target/release/vis $IN_PATH $OUT_PATH" ]
+working-directory = "$PROJECT_TOP_DIR/workplace"
+
+
+[[postprocess]]
+name = "rm out.svg"
+run = [ "rm out.svg" ]
+working-directory = "$PROJECT_TOP_DIR/workplace"
+
+
+[[postprocess]]
+name = "rm out"
+run = [ "rm out/*" ]
+working-directory = "$PROJECT_TOP_DIR/workplace"
