@@ -19,7 +19,7 @@ import subprocess
 from docopt import docopt
 
 
-def update_config(config, args):
+def overwrite_by_cmd_line_args(config, args):
     for x in ['TESTCASE_NUM', 'CONCURRENCY']:
         if args[f"--{x.lower()}"]:
             config[x] = int(args[f"--{x.lower()}"][0])
@@ -186,7 +186,7 @@ if __name__ == '__main__':
     print_grn('done', prefix='    -> ')
 
     print('\nupdate config by argument')
-    safety(update_config, config, args)
+    safety(overwrite_by_cmd_line_args, config, args)
     print_grn('done', prefix='    -> ')
 
     print('\nvalidate and fill config')

@@ -39,7 +39,7 @@ working-directory = "$PROJECT_TOP_DIR/workplace"
 [[preprocess]]
 name = "generate testcases and out dir"
 run = [
-    "if [ ! -f $IN_DIR/`printf %04.0f $((${TESTCASE_NUM}-1))`.txt ]; then seq $TESTCASE_NUM | ./tools/target/release/gen; fi",
+    "if [ ! -f $IN_DIR/`printf %04.0f $((${TESTCASE_NUM}-1))`.txt ]; then seq $TESTCASE_NUM > seeds.txt && ./tools/target/release/gen seeds.txt && rm seeds.txt; fi",
     "if [ ! -d $OUT_DIR ]; then mkdir $OUT_DIR; fi"
 ]
 working-directory = "$PROJECT_TOP_DIR/workplace"
@@ -51,7 +51,7 @@ working-directory = "$PROJECT_TOP_DIR/workplace"
 
 
 [scoring]
-run = [ "./tools/target/release/vis $IN_PATH $OUT_PATH" ]
+run = [ "score_result=(`./tools/target/release/vis $IN_PATH $OUT_PATH`) && echo $score_result > tmp.txt && echo ${score_result[$((${#score_result[@]} - 1))]}" ]
 working-directory = "$PROJECT_TOP_DIR/workplace"
 
 
